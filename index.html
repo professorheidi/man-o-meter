@@ -1,0 +1,255 @@
+
+
+
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💖 Man-O-Meter 💖</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.css">
+    <style>
+        body {
+            font-family: 'Avenir', sans-serif;
+            background: linear-gradient(to bottom right, #ffe6f2, #ffccff);
+            text-align: center;
+            color: #ff69b4;
+            padding: 20px;
+        }
+        .container {
+            max-width: 700px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0px 0px 15px #ffb6c1;
+        }
+        .slider-container {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            background: #fff0f5;
+            transition: all 0.3s ease-in-out;
+        }
+        .slider-container:hover {
+            box-shadow: 0px 0px 10px #ff69b4;
+        }
+        input[type=range] {
+            width: 100%;
+            accent-color: #ff69b4;
+        }
+        .emoji {
+            font-size: 24px;
+            margin-top: 5px;
+        }
+        .button {
+            display: block;
+            width: 100%;
+            margin: 10px 0;
+            padding: 10px;
+            font-size: 16px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        .button-primary {
+            background-color: #ff69b4;
+            color: white;
+        }
+        .button-secondary {
+            background-color: #ffb6c1;
+            color: black;
+        }
+        #digital-beast {
+            display: none;
+            font-size: 50px;
+            margin: 20px 0;
+            animation: chew 0.6s infinite alternate;
+        }
+        @keyframes chew {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.2); }
+        }
+        h2 {
+            cursor: pointer;
+            background: #ffccff;
+            padding: 10px;
+            border-radius: 10px;
+        }
+        h2:hover {
+            background: #ff99cc;
+        }
+        .category-content {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💖 Man-O-Meter 💖</h1>
+        <p>Move the pink sliders to rate the guys, man-boys, and miscellaneous walking red flags in your life...slide wisely; no refunds for poor choices 😆</p>
+        
+        <input type="checkbox" id="selectAll" checked> <label for="selectAll">Select/Deselect All</label>
+        
+        <div id="categories"></div>
+        
+        <button id="submit" class="button button-primary" style="font-size: 18px; padding: 15px; background: linear-gradient(135deg, #ff1493, #ff69b4); border: 2px solid #ff1493; box-shadow: 0px 4px 10px rgba(255, 20, 147, 0.4);">Feed Your Responses to the Digital Man-Eater</button>
+        <div id="digital-beast">💋 Mwah! 😘</div>
+        <button id="export" class="button button-secondary">📜 Spit Out the Man-Boy Report</button>
+<button id="clear" class="button button-secondary">🔥 Purify the Man-Boy Energy</button>
+
+        <canvas id="chart"></canvas>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
+    <script>
+        const categoriesContainer = document.getElementById("categories");
+        const selectAllCheckbox = document.getElementById("selectAll");
+        
+        const categories = {
+            "Boyfriend-Adjacent Categories": [
+                "Boyfriend ❤️ ... The classic, but how do we “really” feel today?", "Ex-Boyfriend 💔 ... A relic of the past, but are you “still thinking about him?”", "Crush 😍 ... Could be a “Prince Charming” or a “total illusion.”", "Situationship 🤷‍♀️ ... Where you “don’t know if you’re dating,” but you’re definitely “something.”", "The Walking Red Flag 🚩 ... You know he’s bad for you, but…", "Gym Bro 💪 ... Texts only about protein shakes and lifting.", "The Man-Child 🎮 ... Would rather game than text back."
+            ],
+            "Relationship Chaos Categories": [
+                "The Ghoster 👻 ... He disappears… and then reappears with a “Hey, you up?”", "The One Who Sends ‘WYD’ at 2 AM 🌙 ... Nope.", "Your Best Friend’s Crush 😬 ... Forbidden territory, but you kinda get it.", "The 'Maybe One Day' Guy ⏳ ... You’re waiting; he’s clueless.", "Your Mom’s Favorite 🤦‍♀️ ... She still asks about him even though YOU dumped him.", "The ‘We Were on a Break’ Guy 🛑 ... But were you really?", "The Guy Who Still Watches Your Stories 👀 ... Move on, sir."
+            ],
+            "Situationship Drama": [
+                "The 'I Can Fix Him' Project 🛠 ... Spoiler alert: You cannot.", "The Guy Who Calls You 'Dude' 🤢 ... Immediate demotion to friend zone.", "The Situationship That Won’t End 🔄 ... Just pick a side already!", "The Guy Who Texts ‘lol’ Instead of a Real Reply 😑 ... Effort level: 0."
+            ],
+            "Random Wildcards": [
+                "The One With a Podcast 🎙 ... You just KNOW it’s unhinged.", "The Guy Who ‘Loves Debates’ 🏛 ... Somehow always wrong.", "The One Who Quotes Too Many Movies 🎬 ... “You complete me” (please stop).", "The One Who Uses ‘💀’ Unironically ... Internet brain rot.", "School/Work Boyfriend 💼❤️ ... Flirty at work, but do you actually like him?", "The One Your Dad Hates 🤦‍♂️ ... And he’s probably right."
+            ]
+        };
+        
+        function renderCategories() {
+            let categoryHTML = "";
+            for (const [category, subcategories] of Object.entries(categories)) {
+                categoryHTML += `<h2 onclick="toggleCategory(this)">${category}</h2>`;
+                categoryHTML += `<div class='category-content'>`;
+                subcategories.forEach(subcategory => {
+                    categoryHTML += `
+                        <div class='slider-container'>
+                            <input type='checkbox' class='subcategory-checkbox' data-category='${subcategory}' checked>
+                            <label>${subcategory}</label>
+                            <input type='range' min='0' max='10' step='1' value='5' class='slider' data-category='${subcategory}'>
+                            <div class='emoji'>🤮😡😞😐🙂😊😍</div>
+                        </div>
+                    `;
+                });
+                categoryHTML += `</div>`;
+            }
+            categoriesContainer.innerHTML = categoryHTML;
+            addSubcategoryCheckboxListeners();
+        }
+        
+        function addSubcategoryCheckboxListeners() {
+            document.querySelectorAll(".subcategory-checkbox").forEach(checkbox => {
+                checkbox.addEventListener("change", function() {
+                    const sliderContainer = this.closest(".slider-container");
+                    sliderContainer.querySelector(".slider").style.display = this.checked ? "block" : "none";
+                    sliderContainer.querySelector(".emoji").style.display = this.checked ? "block" : "none";
+                });
+            });
+        }
+        
+        selectAllCheckbox.addEventListener("change", () => {
+            categoriesContainer.style.display = selectAllCheckbox.checked ? "block" : "none";
+        });
+        
+        document.getElementById("submit").addEventListener("click", () => {
+    const digitalBeast = document.getElementById("digital-beast");
+    digitalBeast.style.display = "block";
+    digitalBeast.innerHTML = "💋 Mwah! 😘";
+    setTimeout(() => {
+        digitalBeast.innerHTML = "💋 CHOMP CHOMP CHOMP! 💋";
+        setTimeout(() => {
+            digitalBeast.innerHTML = "😋 Licking lips!";
+            setTimeout(() => { digitalBeast.style.display = "none"; }, 1000);
+        }, 1000);
+    }, 1000);
+});
+
+renderCategories();
+function collectRatings() {
+    let ratings = [];
+    document.querySelectorAll(".subcategory-checkbox:checked").forEach(checkbox => {
+        let category = checkbox.getAttribute("data-category");
+        let slider = checkbox.closest(".slider-container").querySelector(".slider");
+        let rating = slider.value;
+        ratings.push({ "Boy": category, "Rating": rating });
+    });
+    return ratings;
+}
+
+renderCategories(); 
+
+function clearAllData() {
+    // Reset all sliders to default value (5)
+    document.querySelectorAll(".slider").forEach(slider => {
+        slider.value = 5;
+        slider.style.display = "block";
+    });
+
+    // Check all checkboxes
+    document.querySelectorAll(".subcategory-checkbox").forEach(checkbox => {
+        checkbox.checked = true;
+    });
+
+    // Show all emoji rows
+    document.querySelectorAll(".emoji").forEach(emoji => {
+        emoji.style.display = "block";
+    });
+
+    alert("✨ The Man-O-Meter has been reset. You’re cleansed and ready to reassess. ✨");
+}
+
+
+function exportToCSV() {
+    let ratings = collectRatings();
+    if (ratings.length === 0) {
+        alert("No ratings to export!");
+        return;
+    }
+
+    let now = new Date();
+    let timestamp = now.toLocaleString();
+
+    let csvRows = [];
+    csvRows.push('"Timestamp","Man-Boy Type","Rating"'); // Updated header
+
+    ratings.forEach(row => {
+        let cleanBoyName = `"${row.Boy.replace(/"/g, '""')}"`; // Wrap name in double quotes & escape existing quotes
+        csvRows.push(`"${timestamp}",${cleanBoyName},${row.Rating}`);
+    });
+
+    let csvContent = "data:text/csv;charset=utf-8,\uFEFF" + csvRows.join("\n"); // Ensure UTF-8 encoding
+
+    let encodedUri = encodeURI(csvContent);
+    let link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "Man-O-Meter_Ratings.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+document.getElementById("clear").addEventListener("click", clearAllData);
+
+document.getElementById("submit").addEventListener("click", () => {
+    let ratings = collectRatings();
+    console.log("Collected Ratings:", ratings); // For debugging
+});
+
+document.getElementById("export").addEventListener("click", exportToCSV);
+
+
+</script>
+</body>
+</html>
+    
